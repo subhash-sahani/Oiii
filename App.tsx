@@ -1,44 +1,34 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import React from 'react';
+import { StyleSheet, View, SafeAreaView, StatusBar } from 'react-native';
+import Bouncer from './Bouncer';
+import { friendRegistry } from './friendRegistry';
 
-import { NewAppScreen } from '@react-native/new-app-screen';
-import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
-
-function App() {
-  const isDarkMode = useColorScheme() === 'dark';
+const App = () => {
+  // For testing, we'll trigger Lelouch's sticker
+  const activeFriend = friendRegistry["Lelouch"];
 
   return (
-    <SafeAreaProvider>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppContent />
-    </SafeAreaProvider>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" />
+      <View style={styles.canvas}>
+        {/* This is the character that will bounce across the screen */}
+        <Bouncer
+          imageSource={activeFriend.sticker}
+          size={activeFriend.size}
+          />
+      </View>
+      </SafeAreaView>
   );
-}
-
-function AppContent() {
-  const safeAreaInsets = useSafeAreaInsets();
-
-  return (
-    <View style={styles.container}>
-      <NewAppScreen
-        templateFileName="App.tsx"
-        safeAreaInsets={safeAreaInsets}
-      />
-    </View>
-  );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#f0f0f0', // Light background
+  },
+  canvas: {
+    flex: 1,
+    overflow: 'hidden', // Keeps the character inside the screen bounds
   },
 });
 
