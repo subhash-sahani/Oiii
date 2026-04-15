@@ -1,35 +1,37 @@
-import React from 'react';
-import { StyleSheet, View, SafeAreaView, StatusBar } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet } from 'react-native';
 import Bouncer from './Bouncer';
-import { friendRegistry } from './friendRegistry';
+import { handleNotification } from './OiiiListener';
 
 const App = () => {
-  // For testing, we'll trigger Lelouch's sticker
-  const activeFriend = friendRegistry["Lelouch"];
+  const [activeBouncer, setActiveBouncer] = useState<any>(null);
+
+  // This is a mock function to simulate a WhatsApp message coming in
+  // In the real app, this is triggered by the native Android listener
+  const simulateIncomingOiii = (name: string) => {
+    const result = handleNotification(name, "Hey!");
+    if (result.shouldBounce) {
+      setActiveBouncer(result);
+      
+      // Auto-hide the character after 15 seconds
+      setTimeout(() => setActiveBouncer(null), 15000);
+    }
+  };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-      <View style={styles.canvas}>
-        {/* This is the character that will bounce across the screen */}
-        <Bouncer
-          imageSource={activeFriend.sticker}
-          size={activeFriend.size}
-          />
-      </View>
-      </SafeAreaView>
+    <View style={styles.fullScreen}>
+      {activeBouncer && (
+        <Bouncer 
+          imageSource={activeBouncer.sticker} 
+          size={activeBouncer.size} 
+        />
+      )}
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f0f0f0', // Light background
-  },
-  canvas: {
-    flex: 1,
-    overflow: 'hidden', // Keeps the character inside the screen bounds
-  },
+  fullScreen: { flex: 1, backgroundColor: 'transparent' }
 });
 
 export default App;
