@@ -3,6 +3,16 @@ import { View, StyleSheet } from 'react-native';
 import Bouncer from './Bouncer';
 import { handleNotification } from './OiiiListener';
 
+import RNAndroidNotificationListener from 'react-native-android-notification-listener';
+
+// Inside your App component:
+const requestPermission = async () => {
+  const status = await RNAndroidNotificationListener.getPermissionStatus();
+  if (status !== 'authorized') {
+    RNAndroidNotificationListener.requestPermission();
+  }
+};
+
 const App = () => {
   const [activeBouncer, setActiveBouncer] = useState<any>(null);
 
@@ -31,7 +41,14 @@ const App = () => {
 };
 
 const styles = StyleSheet.create({
-  fullScreen: { flex: 1, backgroundColor: 'transparent' }
+  container: {
+    flex: 1,
+    backgroundColor: 'transparent', // Crucial for the overlay feel
+  },
+  canvas: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
 });
 
 export default App;
