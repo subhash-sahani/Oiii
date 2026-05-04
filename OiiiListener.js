@@ -1,45 +1,44 @@
+import RNAndroidNotificationListener from 'react-native-android-notification-listener';
 import { friendRegistry } from './friendRegistry';
 import { loadFriends } from './StorageHelper';
 
-/**
- * This function processes incoming notifications.
- * @param {string} senderName - The name displayed on the notification.
- * @param {string} messageText - The content of the message.
- * @param {object} notification - The raw notification object from the library.
- */
-export const handleNotification = (senderName, messageText) => {
-  console.log(`System: New notification from ${senderName}`);
+// Initialize the notification listener - call this in App.js on startup
+export const initNotificationListener = (onBouncerTrigger) => {
+  RNAndroidNotificationListener.onNotificationReceived = async (notification) => {
+    const result = await processIncomingNotification(notification);
+    if (result) {
+      onBouncerTrigger(result);
+    }
+  };
+};
 
-  // 1. Check if the sender is in our Oiii Friend Registry
-  const friend = friendRegistry[senderName];
+export const handleNotification = async (senderName) => {
+  console.log(`System: Manual check for ${senderName}`);
+
+  const savedFriends = await loadFriends().catch(() => ({}));
+  const combinedRegistry = { ...friendRegistry, ...savedFriends };
+  const friend = combinedRegistry[senderName];
 
   if (friend) {
-    console.log(`Oiii! Triggering ${friend.name}'s bouncer.`);
     return {
       shouldBounce: true,
       sticker: friend.sticker,
-      speed: friend.speed,
-      size: friend.size
+      speed: friend.speed || 5,
+      size: friend.size || 100
     };
   }
 
-  // 2. If not a registered friend, stay quiet.
   return { shouldBounce: false };
 };
 
 export const processIncomingNotification = async (notification) => {
-  // Check if it's WhatsApp
   if (notification.app !== 'com.whatsapp') return null;
 
-  const sender = notification.title; // In WhatsApp, title is usually the sender's name
-
-  // 1. Try to load custom friends from storage first
-  const savedFriends = await loadFriends();
+  // subText is more reliable for actual sender name in WhatsApp
+  const sender = notification.subText || notification.title;
   
-  // 2. Combine saved friends with your default hard-coded ones
+  const savedFriends = await loadFriends().catch(() => ({}));
   const combinedRegistry = { ...friendRegistry, ...savedFriends };
-
-  const message = notification.text;
 
   console.log(`Checking registry for: ${sender}`);
 

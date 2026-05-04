@@ -9,17 +9,24 @@ export const friendRegistry = {
         speed: 5,
         size: 120,
     },
-    "Nao": {
-        name: "Nao",
-        location: "Home",
+    "Vince": {
+        name: "Vince",
+        location: "Bengaluru",
         sticker: require('./assets/stickers/girl.jpeg'),
         speed: 3,
         size: 80,
     },
-    // Adding myself for testing!
-    "Subhash": {
-        name: "Subhash",
-        location: "Work",
+    "Anupam": {
+        name: "Anupam",
+        location: "Kolkata",
+        sticker: require('./assets/stickers/lelouch.png'),
+        speed: 6,
+        size: 100,
+    },
+    // "Lelouch" added separately for the test button in App.tsx
+    "Ajith Bro": {
+        name: "Ajith Bro",
+        location: "Test",
         sticker: require('./assets/stickers/lelouch.png'),
         speed: 6,
         size: 100,

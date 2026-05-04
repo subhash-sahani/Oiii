@@ -14,27 +14,60 @@ import RNAndroidNotificationListener from 'react-native-android-notification-lis
 // Internal Imports
 import Bouncer from './Bouncer';
 import { friendRegistry } from './friendRegistry';
-import { saveFriends, loadFriends, deleteFriend } from './StorageHelper';
+import { saveFriends, loadFriends, deleteFriend, saveSingleFriend } from './StorageHelper';
+import { initNotificationListener } from './OiiiListener';
+
+// Types
+interface Friend {
+  name: string;
+  sticker: any;
+  size?: number;
+  speed?: number;
+}
+
+interface BouncerData {
+  sticker: any;
+  size?: number;
+  speed?: number;
+}
 
 const App = () => {
-  const [activeBouncer, setActiveBouncer] = useState<any>(null);
-  const [newName, setNewName] = useState('');
-  const [friendsList, setFriendsList] = useState<any[]>([]);
+  const [activeBouncer, setActiveBouncer] = useState<BouncerData | null>(null);
+  const [newName, setNewName] = useState<string>('');
+  const [friendsList, setFriendsList] = useState<Friend[]>([]);
 
-  // 1. Initial Load & Notification Listener
+  // 1. Initial Load, Notification Listener & Permission Check
   useEffect(() => {
     const init = async () => {
+      // Check notification permission on startup
+      const status = await RNAndroidNotificationListener.getPermissionStatus();
+      if (status !== 'authorized') {
+        Alert.alert(
+          "Permission Needed",
+          "Oiii needs notification access to detect your friends. Please enable it.",
+          [{ text: "Open Settings", onPress: () => RNAndroidNotificationListener.requestPermission() }]
+        );
+      }
+
+      // Load saved friends and merge with defaults
       const saved = await loadFriends();
-      // Merge defaults with saved friends and update list state
       const combined = { ...friendRegistry, ...saved };
       setFriendsList(Object.values(combined));
     };
     init();
 
-    const subscription = DeviceEventEmitter.addListener('triggerOiii', (data) => {
+    // Initialize the real notification listener
+    initNotificationListener((bouncerData) => {
+      setActiveBouncer(bouncerData);
+      setTimeout(() => setActiveBouncer(null), 15000);
+    });
+
+    // Listen for manual triggers
+    const subscription = DeviceEventEmitter.addListener('triggerOiii', (data: BouncerData) => {
       setActiveBouncer(data);
       setTimeout(() => setActiveBouncer(null), 15000);
     });
+
     return () => subscription.remove();
   }, []);
 
@@ -43,7 +76,7 @@ const App = () => {
     if (status !== 'authorized') {
       RNAndroidNotificationListener.requestPermission();
     } else {
-      Alert.alert("Permission", "Already enabled!");
+      Alert.alert("Permission", "Notification access is already enabled!");
     }
   };
 
@@ -52,31 +85,58 @@ const App = () => {
     if (testFriend) {
       setActiveBouncer(testFriend);
       setTimeout(() => setActiveBouncer(null), 10000);
+    } else {
+      Alert.alert("Test Failed", "Lelouch not found in registry. Check friendRegistry.js");
     }
   };
 
-  // 2. Add Friend Logic with UI Update
+  // 2. Add Friend Logic
   const addNewFriend = async () => {
-    if (newName.trim() === '') return;
-    
-    const newFriend = {
-      name: newName,
+    if (newName.trim() === '') {
+      Alert.alert("Error", "Please enter a name first!");
+      return;
+    }
+
+    const newFriend: Friend = {
+      name: newName.trim(),
       sticker: require('./assets/stickers/lelouch.png'),
       size: 100,
       speed: 5
     };
 
-    const currentSaved = await loadFriends() || {};
-    const updated = { ...currentSaved, [newName]: newFriend };
-    
-    await saveFriends(updated);
-    
-    // Crucial: Update the list so the UI reflects the change immediately
-    const combined = { ...friendRegistry, ...updated };
-    setFriendsList(Object.values(combined));
-    
-    Alert.alert("Success", `${newName} added!`);
-    setNewName('');
+    const success = await saveSingleFriend(newName.trim(), newFriend);
+
+    if (success) {
+      const saved = await loadFriends();
+      const combined = { ...friendRegistry, ...saved };
+      setFriendsList(Object.values(combined));
+      Alert.alert("Success", `${newName.trim()} added!`);
+      setNewName('');
+    } else {
+      Alert.alert("Error", "Failed to save friend. Please try again.");
+    }
+  };
+
+  // 3. Delete Friend Logic
+  const handleDeleteFriend = async (name: string) => {
+    Alert.alert(
+      "Delete Friend",
+      `Remove ${name} from Oiii?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            const updated = await deleteFriend(name);
+            if (updated !== null) {
+              const combined = { ...friendRegistry, ...updated };
+              setFriendsList(Object.values(combined));
+            }
+          }
+        }
+      ]
+    );
   };
 
   return (
@@ -86,12 +146,12 @@ const App = () => {
         keyExtractor={(item) => item.name}
         ListHeaderComponent={
           <View style={styles.devPanel}>
-            <Text style={styles.title}>Oiii Settings</Text>
-            
+            <Text style={styles.title}>Oiii 👋</Text>
+
             <TouchableOpacity style={styles.button} onPress={requestPermission}>
               <Text style={styles.buttonText}>Enable Notification Service</Text>
             </TouchableOpacity>
-            
+
             <TextInput
               style={styles.input}
               placeholder="WhatsApp Contact Name"
@@ -99,12 +159,12 @@ const App = () => {
               onChangeText={setNewName}
               placeholderTextColor="#999"
             />
-            
-            <TouchableOpacity style={[styles.button, {backgroundColor: '#03dac6'}]} onPress={addNewFriend}>
-              <Text style={[styles.buttonText, {color: '#000'}]}>+ Add Friend</Text>
+
+            <TouchableOpacity style={[styles.button, { backgroundColor: '#03dac6' }]} onPress={addNewFriend}>
+              <Text style={[styles.buttonText, { color: '#000' }]}>+ Add Friend</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={[styles.button, {backgroundColor: '#bb86fc'}]} onPress={testBounce}>
+            <TouchableOpacity style={[styles.button, { backgroundColor: '#bb86fc' }]} onPress={testBounce}>
               <Text style={styles.buttonText}>Manual Test (Lelouch)</Text>
             </TouchableOpacity>
 
@@ -114,14 +174,17 @@ const App = () => {
         renderItem={({ item }) => (
           <View style={styles.friendRow}>
             <Text style={styles.friendName}>{item.name}</Text>
+            <TouchableOpacity onPress={() => handleDeleteFriend(item.name)}>
+              <Text style={styles.deleteButton}>✕</Text>
+            </TouchableOpacity>
           </View>
         )}
       />
 
       {activeBouncer && (
-        <Bouncer 
-          imageSource={activeBouncer.sticker} 
-          size={activeBouncer.size || 100} 
+        <Bouncer
+          imageSource={activeBouncer.sticker}
+          size={activeBouncer.size || 100}
         />
       )}
     </View>
@@ -161,9 +224,13 @@ const styles = StyleSheet.create({
     marginVertical: 5,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#eee'
+    borderColor: '#eee',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center'
   },
-  friendName: { fontSize: 16, color: '#333' }
+  friendName: { fontSize: 16, color: '#333' },
+  deleteButton: { fontSize: 16, color: '#ff4444', fontWeight: 'bold' }
 });
 
 export default App;
