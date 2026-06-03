@@ -1,99 +1,96 @@
-**Note**: This project is still under construction.
+**Note**: This project is still under development.
 
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# Oiii - WhatsApp Notification Visualizer
 
-# Getting Started
+Oiii is a React Native application built on Linux (Ubuntu) that hooks into native Android system events to detect and parse incoming WhatsApp notifications. This project serves as the foundational data pipeline for a responsive, context-aware character animation engine (currently in progress).
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+---
 
-## Step 1: Start Metro
+## 🚀 Project Status: Work In Progress (WIP)
+- [x] **Notification Listener Service:** Successfully intercepts and extracts incoming WhatsApp notifications.
+- [ ] **Character Animation Engine:** Designing interactive visual components that respond to notification text and metadata *(In Progress)*.
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+---
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+## 🛠️ Tech Stack & Environment
 
-```sh
-# Using npm
-npm start
+- **Framework:** React Native (JavaScript)
+- **Build System:** Gradle (Targeting SDK 34 / NDK 25+)
+- **Development OS:** Ubuntu Linux
+- **Target Device:** Android (Tested on clean, stock Android hardware)
 
-# OR using Yarn
-yarn start
+---
+
+## 📋 Prerequisites & Local Setup
+
+To compile and run this project locally, ensure your development environment is mapped out correctly.
+
+### 1. Java Development Kit (JDK)
+The Android build pipeline requires JDK 17. Configure your path variables:
+```bash
+export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+export PATH=$JAVA_HOME/bin:$PATH
 ```
 
-## Step 2: Build and run your app
+## 2. Isolated Android SDK Environment
+This project uses a clean, user-level Android SDK path instead of global system packages to manage licenses and dependencies safely:
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
+Bash
+# Set your SDK home directory
+export ANDROID_HOME=$HOME/android-sdk
+export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
+📦 Installation
+Clone the Repository:
 
-### Android
-
-```sh
-# Using npm
-npm run android
-
-# OR using Yarn
-yarn android
+```Bash
+git clone [https://github.com/subhash-sahani/Oiii.git](https://github.com/subhash-sahani/Oiii.git)
+cd Oiii
 ```
+Install JavaScript Dependencies:
 
-### iOS
-
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
-
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
-bundle install
+```Bash
+npm install
 ```
+Configure Android Build Properties:
+Create a local.properties file inside the android folder to explicitly point Gradle to your local SDK:
 
-Then, and every time you update your native dependencies, run:
-
-```sh
-bundle exec pod install
+```Bash
+echo "sdk.dir=/home/$USER/android-sdk" > android/local.properties
 ```
+Prepare Your Stock Test Device:
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+Go to Settings > About Phone and tap Build Number 7 times to unlock Developer Options.
 
-```sh
-# Using npm
-npm run ios
+Navigate to System > Developer Options and enable USB Debugging.
 
-# OR using Yarn
-yarn ios
+Connect the device to your computer via USB and accept the RSA debugging prompt on the phone screen.
+
+## 🏃‍♂️ Running the App
+Navigate to the native Android directory, grant execution permissions to the build wrapper, clear previous caches, and launch the installer:
+
+```Bash
+# Move to the native layer
+cd android
 ```
+### Grant execution rights to the Gradle wrapper
+chmod +x gradlew
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+### Clean old compilation artifacts
+./gradlew clean
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
-
-## Step 3: Modify your app
-
-Now that you have successfully run the app, let's make changes!
-
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
-
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
-
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+### Build and flash the debug APK to your device
+```
+cd ..
+npx react-native run-android
+```
+## 📂 Project Architecture
+Oiii/
+├── android/               # Native Android configuration & build scripts
+│   ├── app/               # Main application package wrapper
+│   └── build.gradle       # Defines NDK and SDK parameters
+├── src/                   # Core JavaScript application logic
+│   └── services/          # Active notification background listener logic
+├── App.js                 # Application entry point
+└── package.json           # Node modules and dependency scripts
+## 🤝 Contributing
+Feel free to open an issue or submit a pull request if you want to help optimize the background notification listener or collaborate on the upcoming animation rendering state machine.
