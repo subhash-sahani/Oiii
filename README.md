@@ -1,4 +1,3 @@
-**Note**: This project is still under development.
 
 # Oiii - WhatsApp Notification Visualizer
 
